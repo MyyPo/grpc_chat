@@ -7,22 +7,13 @@ import (
 	"sync"
 )
 
-type ChatRepo struct {
-	glog *glog.LoggerV2
-}
-
-func NewUserRepo(glog *glog.LoggerV2) *ChatRepo {
-	return &ChatRepo{
-		glog: glog,
-	}
-}
-
 var connections []*Connection
 
-func NewChatServer() *Server {
+func NewChatServer(grpcLog glog.LoggerV2) *Server {
 	return &Server{
 		chatpb.UnimplementedBroadcastServiceServer{},
 		connections,
+		grpcLog,
 	}
 }
 
@@ -37,6 +28,7 @@ type Server struct {
 	chatpb.UnimplementedBroadcastServiceServer
 	// a collection of many client connections
 	Connection []*Connection
+	grpcLog    glog.LoggerV2
 }
 
 // creates a new connection to the server and opens a channel sending errors
@@ -66,10 +58,10 @@ func (s *Server) ClientMessage(ctx context.Context, msg *chatpb.Message) (*chatp
 
 			if conn.active {
 				err := conn.stream.Send(msg)
-				// grpcLog.Info("Sending message to: ", conn.stream)
+				s.grpcLog.Info("Sending message to: ", conn.stream)
 
 				if err != nil {
-					// grpcLog.Errorf("Stream: %s stopped | Error: %v", conn.stream, err)
+					s.grpcLog.Errorf("Stream: %s stopped | Error: %v", conn.stream, err)
 					conn.active = false
 					conn.error <- err
 				}

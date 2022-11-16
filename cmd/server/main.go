@@ -19,7 +19,7 @@ func init() {
 
 func main() {
 
-	server := service.NewChatServer()
+	server := service.NewChatServer(grpcLog)
 
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", ":8080")
