@@ -60,17 +60,26 @@ func connect(user *chatpb.User) error {
 }
 
 // func login(req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
-func login(req *authpb.SignInRequest) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+// func login(req *authpb.SignInRequest) {
+func login() {
 
-	res, err := authClient.SignIn(ctx, req)
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		req := &authpb.SignInRequest{
+			Username: scanner.Text(),
+			Password: "lol",
+		}
+		res, err := authClient.SignIn(context.Background(), req)
 
-	if err != nil {
-		fmt.Printf("Error while logging in: %v", err)
+		if err != nil {
+			fmt.Printf("Error while logging in: %v", err)
+		} else {
+
+			fmt.Println(res)
+
+			break
+		}
 	}
-
-	fmt.Println(res)
 }
 
 func main() {
@@ -89,11 +98,12 @@ func main() {
 	}
 
 	authClient = authpb.NewAuthServiceClient(conn)
-	cred := &authpb.SignInRequest{
-		Username: "Anon",
-		Password: "lol",
-	}
-	login(cred)
+	// cred := &authpb.SignInRequest{
+	// 	Username: "Anon",
+	// 	Password: "lol",
+	// }
+	// login(cred)
+	login()
 
 	chatClient = chatpb.NewBroadcastServiceClient(conn)
 	user := &chatpb.User{
