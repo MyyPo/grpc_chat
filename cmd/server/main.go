@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
 	"github.com/MyyPo/grpc-chat/service"
 	"google.golang.org/grpc"
@@ -19,7 +20,8 @@ func init() {
 
 func main() {
 
-	server := service.NewChatServer(grpcLog)
+	chatServer := service.NewChatServer(grpcLog)
+	authServer := service.NewAuthServer(grpcLog)
 
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", ":8080")
@@ -29,6 +31,7 @@ func main() {
 
 	grpcLog.Info("The server successfuly started")
 
-	chatpb.RegisterBroadcastServiceServer(grpcServer, server)
+	chatpb.RegisterBroadcastServiceServer(grpcServer, chatServer)
+	authpb.RegisterAuthServiceServer(grpcServer, authServer)
 	grpcServer.Serve(lis)
 }

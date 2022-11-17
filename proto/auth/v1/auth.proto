@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/MyyPo/grpc-chat/pb/auth/v1;authpb";
+
+service AuthService {
+    rpc SignIn (SignInRequest) returns (SignInResponse);
+}
+
+message SignInRequest {
+    string username = 1;
+    string password = 2;    
+}
+
+message SignInResponse {
+    string status = 1;
+    string access_token = 2;
+    string refresh_token = 3;
+}
+
+

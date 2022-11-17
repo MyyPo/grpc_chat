@@ -7,18 +7,21 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"os"
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/credentials/insecure"
+
+	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var client chatpb.BroadcastServiceClient
+var chatClient chatpb.BroadcastServiceClient
+var authClient authpb.AuthServiceClient
 var wait *sync.WaitGroup
 
 func init() {
@@ -28,7 +31,7 @@ func init() {
 func connect(user *chatpb.User) error {
 	var streamerr error
 
-	stream, err := client.ServerMessageStream(context.Background(), &chatpb.ServerMessageStreamRequest{
+	stream, err := chatClient.ServerMessageStream(context.Background(), &chatpb.ServerMessageStreamRequest{
 		User:   user,
 		Active: true,
 	})
@@ -56,6 +59,20 @@ func connect(user *chatpb.User) error {
 	return streamerr
 }
 
+// func login(req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
+func login(req *authpb.SignInRequest) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := authClient.SignIn(ctx, req)
+
+	if err != nil {
+		fmt.Printf("Error while logging in: %v", err)
+	}
+
+	fmt.Println(res)
+}
+
 func main() {
 	timestamp := time.Now()
 
@@ -71,7 +88,14 @@ func main() {
 		log.Fatalf("Failed to connect to the server")
 	}
 
-	client = chatpb.NewBroadcastServiceClient(conn)
+	authClient = authpb.NewAuthServiceClient(conn)
+	cred := &authpb.SignInRequest{
+		Username: "Anon",
+		Password: "lol",
+	}
+	login(cred)
+
+	chatClient = chatpb.NewBroadcastServiceClient(conn)
 	user := &chatpb.User{
 		Id:   hex.EncodeToString(id[:]),
 		Name: *name,
@@ -91,7 +115,7 @@ func main() {
 				Timestamp: timestamppb.New(time.Now()),
 			}
 
-			_, err := client.ClientMessage(context.Background(), msg)
+			_, err := chatClient.ClientMessage(context.Background(), msg)
 			if err != nil {
 				fmt.Printf("Error while sending a message: %v", err)
 				break

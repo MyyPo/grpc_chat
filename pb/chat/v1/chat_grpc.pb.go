@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type BroadcastServiceClient interface {
 	ServerMessageStream(ctx context.Context, in *ServerMessageStreamRequest, opts ...grpc.CallOption) (BroadcastService_ServerMessageStreamClient, error)
 	ClientMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Close, error)
+	GetCurrentUser(ctx context.Context, in *GetCurrentUserRequest, opts ...grpc.CallOption) (*User, error)
 }
 
 type broadcastServiceClient struct {
@@ -75,12 +76,22 @@ func (c *broadcastServiceClient) ClientMessage(ctx context.Context, in *Message,
 	return out, nil
 }
 
+func (c *broadcastServiceClient) GetCurrentUser(ctx context.Context, in *GetCurrentUserRequest, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/chat.v1.BroadcastService/GetCurrentUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BroadcastServiceServer is the server API for BroadcastService service.
 // All implementations must embed UnimplementedBroadcastServiceServer
 // for forward compatibility
 type BroadcastServiceServer interface {
 	ServerMessageStream(*ServerMessageStreamRequest, BroadcastService_ServerMessageStreamServer) error
 	ClientMessage(context.Context, *Message) (*Close, error)
+	GetCurrentUser(context.Context, *GetCurrentUserRequest) (*User, error)
 	mustEmbedUnimplementedBroadcastServiceServer()
 }
 
@@ -93,6 +104,9 @@ func (UnimplementedBroadcastServiceServer) ServerMessageStream(*ServerMessageStr
 }
 func (UnimplementedBroadcastServiceServer) ClientMessage(context.Context, *Message) (*Close, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientMessage not implemented")
+}
+func (UnimplementedBroadcastServiceServer) GetCurrentUser(context.Context, *GetCurrentUserRequest) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentUser not implemented")
 }
 func (UnimplementedBroadcastServiceServer) mustEmbedUnimplementedBroadcastServiceServer() {}
 
@@ -146,6 +160,24 @@ func _BroadcastService_ClientMessage_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BroadcastService_GetCurrentUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCurrentUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BroadcastServiceServer).GetCurrentUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chat.v1.BroadcastService/GetCurrentUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BroadcastServiceServer).GetCurrentUser(ctx, req.(*GetCurrentUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BroadcastService_ServiceDesc is the grpc.ServiceDesc for BroadcastService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +188,10 @@ var BroadcastService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientMessage",
 			Handler:    _BroadcastService_ClientMessage_Handler,
+		},
+		{
+			MethodName: "GetCurrentUser",
+			Handler:    _BroadcastService_GetCurrentUser_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

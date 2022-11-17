@@ -9,8 +9,8 @@ import (
 
 var connections []*Connection
 
-func NewChatServer(grpcLog glog.LoggerV2) *Server {
-	return &Server{
+func NewChatServer(grpcLog glog.LoggerV2) *ChatServer {
+	return &ChatServer{
 		chatpb.UnimplementedBroadcastServiceServer{},
 		connections,
 		grpcLog,
@@ -24,7 +24,7 @@ type Connection struct {
 	error  chan error
 }
 
-type Server struct {
+type ChatServer struct {
 	chatpb.UnimplementedBroadcastServiceServer
 	// a collection of many client connections
 	Connection []*Connection
@@ -32,7 +32,7 @@ type Server struct {
 }
 
 // creates a new connection to the server and opens a channel sending errors
-func (s *Server) ServerMessageStream(ptc *chatpb.ServerMessageStreamRequest, stream chatpb.BroadcastService_ServerMessageStreamServer) error {
+func (s *ChatServer) ServerMessageStream(ptc *chatpb.ServerMessageStreamRequest, stream chatpb.BroadcastService_ServerMessageStreamServer) error {
 	conn := &Connection{
 		stream: stream,
 		id:     ptc.User.Id,
@@ -45,7 +45,7 @@ func (s *Server) ServerMessageStream(ptc *chatpb.ServerMessageStreamRequest, str
 	return <-conn.error
 }
 
-func (s *Server) ClientMessage(ctx context.Context, msg *chatpb.Message) (*chatpb.Close, error) {
+func (s *ChatServer) ClientMessage(ctx context.Context, msg *chatpb.Message) (*chatpb.Close, error) {
 	wait := sync.WaitGroup{}
 	done := make(chan int)
 

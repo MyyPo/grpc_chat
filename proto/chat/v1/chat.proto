@@ -9,6 +9,7 @@ option go_package = "github.com/MyyPo/grpc-chat/pb/chat/v1;chatpb";
 service BroadcastService {
     rpc ServerMessageStream (ServerMessageStreamRequest) returns (stream Message);
     rpc ClientMessage (Message) returns (Close);
+    rpc GetCurrentUser (GetCurrentUserRequest) returns (User);
 }
 
 message User {
@@ -30,3 +31,7 @@ message ServerMessageStreamRequest {
 
 // message closing the connection
 message Close {}
+
+message GetCurrentUserRequest {
+    string id = 1;
+}
