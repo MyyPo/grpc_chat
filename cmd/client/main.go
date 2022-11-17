@@ -14,14 +14,13 @@ import (
 
 	"google.golang.org/grpc/credentials/insecure"
 
-	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
+	client_service "github.com/MyyPo/grpc-chat/cmd/client/service"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var chatClient chatpb.BroadcastServiceClient
-var authClient authpb.AuthServiceClient
 var wait *sync.WaitGroup
 
 func init() {
@@ -59,28 +58,7 @@ func connect(user *chatpb.User) error {
 	return streamerr
 }
 
-// func login(req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
-// func login(req *authpb.SignInRequest) {
-func login() {
-
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		req := &authpb.SignInRequest{
-			Username: scanner.Text(),
-			Password: "lol",
-		}
-		res, err := authClient.SignIn(context.Background(), req)
-
-		if err != nil {
-			fmt.Printf("Error while logging in: %v", err)
-		} else {
-
-			fmt.Println(res)
-
-			break
-		}
-	}
-}
+var scanner *bufio.Scanner
 
 func main() {
 	timestamp := time.Now()
@@ -96,14 +74,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to the server")
 	}
+	scanner = bufio.NewScanner(os.Stdin)
 
-	authClient = authpb.NewAuthServiceClient(conn)
-	// cred := &authpb.SignInRequest{
-	// 	Username: "Anon",
-	// 	Password: "lol",
-	// }
-	// login(cred)
-	login()
+	AuthClient := client_service.NewSignInClient(conn, scanner)
+
+	AuthClient.SignIn(context.Background())
 
 	chatClient = chatpb.NewBroadcastServiceClient(conn)
 	user := &chatpb.User{
