@@ -8,7 +8,7 @@ import (
 
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
-	"github.com/MyyPo/grpc-chat/utils"
+	"github.com/MyyPo/grpc-chat/util"
 
 	"github.com/MyyPo/grpc-chat/service"
 	"google.golang.org/grpc"
@@ -22,12 +22,17 @@ func init() {
 }
 
 func main() {
-	config, err := utils.NewConfig("./../..")
+
+	config, err := util.NewConfig("./../..")
 	if err != nil {
-		log.Fatalf("failted to load config %v", err)
+		log.Fatalf("failed to load config %v", err)
 	}
 
-	fmt.Println(config.JWTSignature)
+	jwtTest, err := util.GenerateJWT(config.JWTSignature)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(jwtTest)
 
 	chatServer := service.NewChatServer(grpcLog)
 	authServer := service.NewAuthServer(grpcLog)
