@@ -6,11 +6,11 @@ import (
 	"net"
 	"os"
 
+	"github.com/MyyPo/grpc-chat/internal/util"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
-	"github.com/MyyPo/grpc-chat/util"
 
-	"github.com/MyyPo/grpc-chat/service"
+	"github.com/MyyPo/grpc-chat/internal/service"
 	"google.golang.org/grpc"
 	glog "google.golang.org/grpc/grpclog"
 )
@@ -28,16 +28,18 @@ func main() {
 		log.Fatalf("failed to load config %v", err)
 	}
 
-	tokenManager := util.NewTokenManager(config.JWTSignature)
+	impl := service.NewImplementation(grpcLog, config.JWTSignature)
 
-	jwtTest, err := tokenManager.GenerateJWT()
+	// tokenManager := util.NewTokenManager(config.JWTSignature)
+
+	jwtTest, err := impl.GenerateJWT()
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(jwtTest)
 
-	chatServer := service.NewChatServer(grpcLog)
-	authServer := service.NewAuthServer(grpcLog)
+	// chatServer := service.NewChatServer(grpcLog)
+	// authServer := service.NewAuthServer(grpcLog)
 
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", ":8080")
@@ -47,7 +49,7 @@ func main() {
 
 	grpcLog.Info("The server successfuly started")
 
-	chatpb.RegisterBroadcastServiceServer(grpcServer, chatServer)
-	authpb.RegisterAuthServiceServer(grpcServer, authServer)
+	chatpb.RegisterBroadcastServiceServer(grpcServer, &impl)
+	authpb.RegisterAuthServiceServer(grpcServer, &impl)
 	grpcServer.Serve(lis)
 }

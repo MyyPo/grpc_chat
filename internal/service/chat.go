@@ -9,8 +9,8 @@ import (
 
 var connections []*Connection
 
-func NewChatServer(grpcLog glog.LoggerV2) *ChatServer {
-	return &ChatServer{
+func NewChatServer(grpcLog glog.LoggerV2) ChatServer {
+	return ChatServer{
 		chatpb.UnimplementedBroadcastServiceServer{},
 		connections,
 		grpcLog,

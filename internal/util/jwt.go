@@ -6,8 +6,8 @@ type TokenManager struct {
 	jwtSignature string
 }
 
-func NewTokenManager(jwtSignature string) *TokenManager {
-	return &TokenManager{
+func NewTokenManager(jwtSignature string) TokenManager {
+	return TokenManager{
 		jwtSignature: jwtSignature,
 	}
 }

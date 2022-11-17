@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewAuthServer(grpcLog glog.LoggerV2) *AuthServer {
-	return &AuthServer{
+func NewAuthServer(grpcLog glog.LoggerV2) AuthServer {
+	return AuthServer{
 		authpb.UnimplementedAuthServiceServer{},
 		grpcLog,
 	}
@@ -22,15 +22,15 @@ type AuthServer struct {
 	grpcLog glog.LoggerV2
 }
 
-func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
+func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
 	user := req.GetUsername()
-	s.grpcLog.Info("Attempt to log in with: ", user)
+	i.ChatServer.grpcLog.Info("Attempt to log in with: ", user)
 	if user == "Anon" {
-		s.grpcLog.Info("anon logged in")
-		// accessToken, _ := util.GenerateJWT("")
+		i.ChatServer.grpcLog.Info("anon logged in")
+		accessToken, _ := i.TokenManager.GenerateJWT()
 		res := &authpb.SignInResponse{
 			Status:       "success",
-			AccessToken:  "placeholder",
+			AccessToken:  accessToken,
 			RefreshToken: "placeholder",
 		}
 
