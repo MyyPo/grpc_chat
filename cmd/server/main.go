@@ -28,7 +28,9 @@ func main() {
 		log.Fatalf("failed to load config %v", err)
 	}
 
-	jwtTest, err := util.GenerateJWT(config.JWTSignature)
+	tokenManager := util.NewTokenManager(config.JWTSignature)
+
+	jwtTest, err := tokenManager.GenerateJWT()
 	if err != nil {
 		fmt.Println(err)
 	}

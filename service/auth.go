@@ -4,6 +4,7 @@ import (
 	"context"
 
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
+	// "github.com/MyyPo/grpc-chat/util"
 	"google.golang.org/grpc/codes"
 	glog "google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
@@ -26,6 +27,7 @@ func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*au
 	s.grpcLog.Info("Attempt to log in with: ", user)
 	if user == "Anon" {
 		s.grpcLog.Info("anon logged in")
+		// accessToken, _ := util.GenerateJWT("")
 		res := &authpb.SignInResponse{
 			Status:       "success",
 			AccessToken:  "placeholder",
