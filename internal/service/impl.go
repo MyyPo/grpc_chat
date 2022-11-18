@@ -12,12 +12,12 @@ type Implementation struct {
 	util.TokenManager
 }
 
-func NewImplementation(jwtSignature string) Implementation {
+func NewImplementation(tokenManager util.TokenManager) Implementation {
 	grpcLogger := glog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout)
 
 	return Implementation{
 		NewAuthServer(grpcLogger),
 		NewChatServer(grpcLogger),
-		util.NewTokenManager(jwtSignature),
+		tokenManager,
 	}
 }

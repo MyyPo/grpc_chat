@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -20,7 +21,20 @@ func main() {
 		log.Fatalf("failed to load config %v", err)
 	}
 
-	impl := service.NewImplementation(config.JWTSignature)
+	tokenManager := util.NewTokenManager(config.AccessSignature, config.RefreshSignature, config.AccessTokenDuration, config.RefreshTokenDuration)
+
+	impl := service.NewImplementation(tokenManager)
+
+	accessJwtTest, err := impl.GenerateJWT(true)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	refreshJwtTest, err := impl.GenerateJWT(false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(impl.ValidateToken(accessJwtTest, true))
+	fmt.Println(impl.ValidateToken(refreshJwtTest, false))
 
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", ":8080")

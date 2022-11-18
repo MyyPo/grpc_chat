@@ -26,7 +26,7 @@ func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) 
 	i.ChatServer.grpcLog.Info("Attempt to log in with: ", user)
 	if user == "Anon" {
 		i.ChatServer.grpcLog.Info("anon logged in")
-		accessToken, _ := i.TokenManager.GenerateJWT()
+		accessToken, _ := i.TokenManager.GenerateJWT(true)
 		res := &authpb.SignInResponse{
 			Status:       "success",
 			AccessToken:  accessToken,
