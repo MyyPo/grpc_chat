@@ -4,7 +4,6 @@ import (
 	"context"
 
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
-	// "github.com/MyyPo/grpc-chat/util"
 	"google.golang.org/grpc/codes"
 	glog "google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
