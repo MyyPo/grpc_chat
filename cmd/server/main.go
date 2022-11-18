@@ -18,7 +18,7 @@ func main() {
 	// load the env variables
 	config, err := util.NewConfig("./../..")
 	if err != nil {
-		log.Fatalf("failed to load config %v", err)
+		log.Fatalf("failed to load config: %v", err)
 	}
 
 	tokenManager := util.NewTokenManager(config.AccessSignature, config.RefreshSignature, config.AccessTokenDuration, config.RefreshTokenDuration)

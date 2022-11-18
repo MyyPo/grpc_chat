@@ -23,14 +23,15 @@ type AuthServer struct {
 
 func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
 	user := req.GetUsername()
+	password := req.GetPassword()
 	i.ChatServer.grpcLog.Info("Attempt to log in with: ", user)
-	if user == "Anon" {
-		i.ChatServer.grpcLog.Info("anon logged in")
+	if user == "Anon" && password == "Cute" {
+		i.ChatServer.grpcLog.Infof("User logged in: %s", user)
 		accessToken, _ := i.TokenManager.GenerateJWT(true)
+		refreshToken, _ := i.TokenManager.GenerateJWT(false)
 		res := &authpb.SignInResponse{
-			Status:       "success",
 			AccessToken:  accessToken,
-			RefreshToken: "placeholder",
+			RefreshToken: refreshToken,
 		}
 
 		return res, nil
@@ -38,4 +39,8 @@ func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) 
 
 	return nil, status.Errorf(codes.NotFound, "Not found, login failed")
 
+}
+
+func (i *Implementation) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
+	return &authpb.RefreshTokenResponse{}, nil
 }
