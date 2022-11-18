@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"time"
 
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	"google.golang.org/grpc"
@@ -36,10 +37,27 @@ func (client *AuthClient) SignIn(ctx context.Context) {
 		} else {
 
 			fmt.Println(res)
+			time.Sleep(time.Second * 3)
+			refresh, err := client.RefreshToken(res.RefreshToken)
+			if err != nil {
+				fmt.Printf("Error while trying to refresh the token: %v\n", err)
+			}
+			fmt.Println(refresh)
 
 			break
 		}
 	}
+}
+
+func (client *AuthClient) RefreshToken(refreshToken string) (*authpb.RefreshTokenResponse, error) {
+	req := &authpb.RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+	res, err := client.service.RefreshToken(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (client *AuthClient) getCredentials() (string, string) {

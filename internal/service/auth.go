@@ -42,5 +42,10 @@ func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) 
 }
 
 func (i *Implementation) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
-	return &authpb.RefreshTokenResponse{}, nil
+	tokenPackage, err := i.TokenManager.RerfreshToken(req.GetRefreshToken())
+	if err != nil {
+		return nil, err
+	}
+
+	return &tokenPackage, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -53,7 +54,7 @@ func (tm *TokenManager) GenerateJWT(isAccessTok bool) (string, error) {
 	return token, nil
 }
 
-func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) (bool, error) {
+func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) error {
 	var signature string
 	if isAccessTok {
 		signature = tm.AccessSignature
@@ -72,14 +73,28 @@ func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) (boo
 		return []byte(signature), nil
 	})
 	if err != nil {
-		return false, fmt.Errorf("failed to validate the token: %v", err)
+		return fmt.Errorf("failed to validate the token: %v", err)
 	}
 
 	// check if the token expired, or something else is wrong with claims
 	_, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return false, fmt.Errorf("claims error: %v", err)
+		return fmt.Errorf("claims error: %v", err)
 	}
 
-	return true, nil
+	return nil
+}
+
+func (tm *TokenManager) RerfreshToken(tokenString string) (authpb.RefreshTokenResponse, error) {
+	if err := tm.ValidateToken(tokenString, false); err != nil {
+		return authpb.RefreshTokenResponse{}, err
+	}
+
+	accessToken, _ := tm.GenerateJWT(true)
+	refreshToken, _ := tm.GenerateJWT(false)
+
+	return authpb.RefreshTokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
