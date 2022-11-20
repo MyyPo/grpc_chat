@@ -3,32 +3,35 @@ package service
 import (
 	"context"
 
+	"github.com/MyyPo/grpc-chat/internal/util"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	"google.golang.org/grpc/codes"
 	glog "google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 )
 
-func NewAuthServer(grpcLog glog.LoggerV2) AuthServer {
+func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager) AuthServer {
 	return AuthServer{
 		authpb.UnimplementedAuthServiceServer{},
+		&tokenManager,
 		grpcLog,
 	}
 }
 
 type AuthServer struct {
 	authpb.UnimplementedAuthServiceServer
-	grpcLog glog.LoggerV2
+	tokenManager *util.TokenManager
+	grpcLog      glog.LoggerV2
 }
 
-func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
+func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
 	user := req.GetUsername()
 	password := req.GetPassword()
-	i.ChatServer.grpcLog.Info("Attempt to log in with: ", user)
+	s.grpcLog.Info("Attempt to log in with: ", user)
 	if user == "Anon" && password == "Cute" {
-		i.ChatServer.grpcLog.Infof("User logged in: %s", user)
-		accessToken, _ := i.TokenManager.GenerateJWT(true)
-		refreshToken, _ := i.TokenManager.GenerateJWT(false)
+		s.grpcLog.Infof("User logged in: %s", user)
+		accessToken, _ := s.tokenManager.GenerateJWT(true)
+		refreshToken, _ := s.tokenManager.GenerateJWT(false)
 		res := &authpb.SignInResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
@@ -41,8 +44,8 @@ func (i *Implementation) SignIn(ctx context.Context, req *authpb.SignInRequest) 
 
 }
 
-func (i *Implementation) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
-	tokenPackage, err := i.TokenManager.RerfreshToken(req.GetRefreshToken())
+func (s *AuthServer) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
+	tokenPackage, err := s.tokenManager.RerfreshToken(req.GetRefreshToken())
 	if err != nil {
 		return nil, err
 	}

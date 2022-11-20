@@ -9,15 +9,16 @@ import (
 type Implementation struct {
 	AuthServer
 	ChatServer
-	util.TokenManager
+	AuthInterceptor
 }
 
-func NewImplementation(tokenManager util.TokenManager) Implementation {
+func NewImplementation(config util.Config) Implementation {
 	grpcLogger := glog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout)
+	tokenManager := util.NewTokenManager(config.AccessSignature, config.RefreshSignature, config.AccessTokenDuration, config.RefreshTokenDuration)
 
 	return Implementation{
-		NewAuthServer(grpcLogger),
+		NewAuthServer(grpcLogger, tokenManager),
 		NewChatServer(grpcLogger),
-		tokenManager,
+		NewAuthInterceptor(tokenManager),
 	}
 }

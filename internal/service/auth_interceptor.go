@@ -16,8 +16,8 @@ type AuthInterceptor struct {
 	tokenManager *util.TokenManager
 }
 
-func NewAuthInterceptor(tokenManager *util.TokenManager) *AuthInterceptor {
-	return &AuthInterceptor{tokenManager: tokenManager}
+func NewAuthInterceptor(tokenManager util.TokenManager) AuthInterceptor {
+	return AuthInterceptor{tokenManager: &tokenManager}
 }
 
 func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {

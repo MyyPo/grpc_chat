@@ -20,15 +20,11 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	tokenManager := util.NewTokenManager(config.AccessSignature, config.RefreshSignature, config.AccessTokenDuration, config.RefreshTokenDuration)
-
-	impl := service.NewImplementation(tokenManager)
-
-	interceptor := service.NewAuthInterceptor(&tokenManager)
+	impl := service.NewImplementation(*config)
 
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(interceptor.Unary()),
-		grpc.StreamInterceptor(interceptor.Stream()),
+		grpc.UnaryInterceptor(impl.AuthInterceptor.Unary()),
+		grpc.StreamInterceptor(impl.AuthInterceptor.Stream()),
 	)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
