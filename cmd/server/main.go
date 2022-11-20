@@ -24,7 +24,12 @@ func main() {
 
 	impl := service.NewImplementation(tokenManager)
 
-	grpcServer := grpc.NewServer()
+	interceptor := service.NewAuthInterceptor(&tokenManager)
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.Unary()),
+		grpc.StreamInterceptor(interceptor.Stream()),
+	)
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatalf("failed to create the server %v", err)
