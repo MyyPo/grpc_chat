@@ -21,7 +21,9 @@ func NewSignInClient(conn *grpc.ClientConn, scanner *bufio.Scanner) *AuthClient 
 	return &AuthClient{service, scanner}
 }
 
-func (client *AuthClient) SignIn(ctx context.Context) {
+func (client *AuthClient) SignIn() (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	for {
 		username, password := client.getCredentials()
@@ -30,7 +32,7 @@ func (client *AuthClient) SignIn(ctx context.Context) {
 			Username: username,
 			Password: password,
 		}
-		res, err := client.service.SignIn(context.Background(), req)
+		res, err := client.service.SignIn(ctx, req)
 
 		if err != nil {
 			fmt.Printf("Error while logging in: %v\n", err)
@@ -44,7 +46,7 @@ func (client *AuthClient) SignIn(ctx context.Context) {
 			}
 			fmt.Println(refresh)
 
-			break
+			return res.GetAccessToken(), nil
 		}
 	}
 }

@@ -40,7 +40,7 @@ func (client *ChatClient) ServerMessageStream(ctx context.Context) error {
 		Name: "Name",
 	}
 
-	stream, err := client.service.ServerMessageStream(context.Background(), &chatpb.ServerMessageStreamRequest{
+	stream, err := client.service.ServerMessageStream(ctx, &chatpb.ServerMessageStreamRequest{
 		User:   user,
 		Active: true,
 	})
@@ -92,7 +92,7 @@ func (client *ChatClient) ClientMessage(ctx context.Context) {
 				Timestamp: timestamppb.New(time.Now()),
 			}
 
-			_, err := client.service.ClientMessage(context.Background(), msg)
+			_, err := client.service.ClientMessage(ctx, msg)
 			if err != nil {
 				fmt.Printf("Error while sending a message: %v", err)
 				break

@@ -13,11 +13,15 @@ import (
 )
 
 type AuthInterceptor struct {
-	tokenManager *util.TokenManager
+	tokenManager    *util.TokenManager
+	accessibleRoles map[string][]string
 }
 
-func NewAuthInterceptor(tokenManager util.TokenManager) AuthInterceptor {
-	return AuthInterceptor{tokenManager: &tokenManager}
+func NewAuthInterceptor(tokenManager util.TokenManager, accessibleRoles map[string][]string) AuthInterceptor {
+	return AuthInterceptor{
+		tokenManager:    &tokenManager,
+		accessibleRoles: accessibleRoles,
+	}
 }
 
 func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
@@ -29,9 +33,9 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		log.Println("--> Unary interceptor: ", info.FullMethod)
 
-		// if err := interceptor.authorize(ctx, info.FullMethod); err != nil {
-		// 	return nil, err
-		// }
+		if err := interceptor.authorize(ctx, info.FullMethod); err != nil {
+			return nil, err
+		}
 
 		return handler(ctx, req)
 	}
@@ -45,7 +49,6 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 		handler grpc.StreamHandler,
 	) error {
 		log.Println("--> Stream interceptor: ", info.FullMethod)
-
 		if err := interceptor.authorize(stream.Context(), info.FullMethod); err != nil {
 			return err
 		}
@@ -54,23 +57,27 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 }
 
 func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string) error {
+	// accessibleRoles, ok := interceptor.accessibleRoles[method]
+	_, ok := interceptor.accessibleRoles[method]
+	// if no roles specified, allow access to everyone
+	if !ok {
+		return nil
+	}
+
 	md, ok := metadata.FromIncomingContext(ctx)
-	fmt.Println(md)
 	if !ok {
 		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
 	}
-
-	// values := md["content-type"]
 	values := md["access_token"]
 	if len(values) == 0 {
 		return status.Errorf(codes.Unauthenticated, "access token not provided")
 	}
 	accessToken := values[0]
 	fmt.Println(accessToken)
-	// err := interceptor.tokenManager.ValidateToken(accessToken, true)
-	// if err != nil {
-	// 	return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
-	// }
+	err := interceptor.tokenManager.ValidateToken(accessToken, true)
+	if err != nil {
+		return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
+	}
 
 	return nil
 }

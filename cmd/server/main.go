@@ -20,7 +20,13 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	impl := service.NewImplementation(*config)
+	basicPath := "/chat.v1.BroadcastService/"
+	accessibleRoles := map[string][]string{
+		basicPath + "ServerMessageStream": {"user"},
+		basicPath + "ClientMessage":       {"user"},
+	}
+
+	impl := service.NewImplementation(*config, accessibleRoles)
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(impl.AuthInterceptor.Unary()),

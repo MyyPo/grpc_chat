@@ -47,12 +47,15 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryClientInterceptor {
 		log.Printf("--> unary interceptor: %s", method)
 
 		log.Println(interceptor.authMethods["access_token"])
+		interceptor.accessToken = "hello"
+		ctx.Value("hello")
 
-		if interceptor.authMethods[method] {
-			return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
-		}
+		// if interceptor.authMethods[method] {
+		// 	return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
+		// }
 
-		return invoker(ctx, method, req, reply, cc, opts...)
+		return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
+		// return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
@@ -68,11 +71,15 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamClientInterceptor {
 	) (grpc.ClientStream, error) {
 		log.Printf("--> stream interceptor: %s", method)
 
-		if interceptor.authMethods[method] {
-			return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
-		}
+		interceptor.accessToken = "hello"
+		ctx.Value("hello")
 
-		return streamer(ctx, desc, cc, method, opts...)
+		// if interceptor.authMethods[method] {
+		// 	return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
+		// }
+
+		return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
+		// return streamer(ctx, desc, cc, method, opts...)
 	}
 }
 

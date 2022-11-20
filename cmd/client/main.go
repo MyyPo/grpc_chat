@@ -45,7 +45,7 @@ func main() {
 	}
 	scanner = bufio.NewScanner(os.Stdin)
 
-	authClient.SignIn(context.Background())
+	authClient.SignIn()
 
 	chatClient := client_service.NewChatClient(conn, scanner)
 
