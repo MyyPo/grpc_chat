@@ -25,11 +25,11 @@ func NewAuthInterceptor(
 		authMethods: authMethods,
 	}
 
-	// err := interceptor.scheduleRefreshToken(refreshDuration)
+	err := interceptor.scheduleRefreshToken(refreshDuration)
 
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 
 	return interceptor, nil
 }
@@ -46,16 +46,13 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryClientInterceptor {
 	) error {
 		log.Printf("--> unary interceptor: %s", method)
 
-		log.Println(interceptor.authMethods["access_token"])
-		interceptor.accessToken = "hello"
-		ctx.Value("hello")
+		log.Println(interceptor.accessToken)
 
-		// if interceptor.authMethods[method] {
-		// 	return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
-		// }
+		if interceptor.authMethods[method] {
+			return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
+		}
 
-		return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
-		// return invoker(ctx, method, req, reply, cc, opts...)
+		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
@@ -71,18 +68,51 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamClientInterceptor {
 	) (grpc.ClientStream, error) {
 		log.Printf("--> stream interceptor: %s", method)
 
-		interceptor.accessToken = "hello"
-		ctx.Value("hello")
+		log.Println(interceptor.accessToken)
 
-		// if interceptor.authMethods[method] {
-		// 	return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
-		// }
+		if interceptor.authMethods[method] {
+			return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
+		}
 
-		return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
+		return streamer(ctx, desc, cc, method, opts...)
 		// return streamer(ctx, desc, cc, method, opts...)
 	}
 }
 
 func (interceptor *AuthInterceptor) attachToken(ctx context.Context) context.Context {
 	return metadata.AppendToOutgoingContext(ctx, "access_token", interceptor.accessToken)
+}
+
+func (interceptor *AuthInterceptor) scheduleRefreshToken(refreshDuration time.Duration) error {
+	err := interceptor.refreshToken()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		wait := refreshDuration
+		for {
+			time.Sleep(wait)
+			err := interceptor.refreshToken()
+			if err != nil {
+				wait = time.Second
+			} else {
+				wait = refreshDuration
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (interceptor *AuthInterceptor) refreshToken() error {
+	accessToken, err := interceptor.authClient.SignIn()
+	if err != nil {
+		return err
+	}
+
+	interceptor.accessToken = accessToken
+	log.Printf("token refreshed: %v", accessToken)
+
+	return nil
 }

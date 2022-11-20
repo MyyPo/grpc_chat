@@ -22,34 +22,34 @@ func NewSignInClient(conn *grpc.ClientConn, scanner *bufio.Scanner) *AuthClient 
 }
 
 func (client *AuthClient) SignIn() (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	// for {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+	username, password := client.getCredentials()
 
-	for {
-		username, password := client.getCredentials()
+	req := &authpb.SignInRequest{
+		Username: username,
+		Password: password,
+	}
+	res, err := client.service.SignIn(ctx, req)
 
-		req := &authpb.SignInRequest{
-			Username: username,
-			Password: password,
-		}
-		res, err := client.service.SignIn(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("error while logging in: %v", err)
+	} else {
 
-		if err != nil {
-			fmt.Printf("Error while logging in: %v\n", err)
-		} else {
-
-			fmt.Println(res)
-			time.Sleep(time.Second * 1)
-			refresh, err := client.RefreshToken(res.RefreshToken)
-			if err != nil {
-				fmt.Printf("Error while trying to refresh the token: %v\n", err)
-			}
-			fmt.Println(refresh)
-
-			return res.GetAccessToken(), nil
-		}
+		// fmt.Println(res)
+		// time.Sleep(time.Second * 1)
+		// refresh, err := client.RefreshToken(res.RefreshToken)
+		// if err != nil {
+		// 	fmt.Printf("Error while trying to refresh the token: %v\n", err)
+		// }
+		// fmt.Println(refresh)
+		return res.GetAccessToken(), nil
 	}
 }
+
+// }
 
 func (client *AuthClient) RefreshToken(refreshToken string) (*authpb.RefreshTokenResponse, error) {
 	req := &authpb.RefreshTokenRequest{

@@ -16,8 +16,11 @@ import (
 var scanner *bufio.Scanner
 
 func main() {
+	basicPath := "/chat.v1.BroadcastService/"
+
 	authMethods := map[string]bool{
-		"access_token": true,
+		basicPath + "ServerMessageStream": true,
+		basicPath + "ClientMessage":       true,
 	}
 
 	scanner = bufio.NewScanner(os.Stdin)
@@ -44,8 +47,6 @@ func main() {
 		log.Fatalf("Failed to connect to the server")
 	}
 	scanner = bufio.NewScanner(os.Stdin)
-
-	authClient.SignIn()
 
 	chatClient := client_service.NewChatClient(conn, scanner)
 
