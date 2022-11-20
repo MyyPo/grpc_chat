@@ -32,7 +32,7 @@ func main() {
 	authClient := client_service.NewSignInClient(tempConn, scanner)
 	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 10*time.Minute)
 	if err != nil {
-		log.Fatalf("Fatal to initialize interceptors %v", err)
+		log.Fatalf("Failed to initialize interceptors %v", err)
 	}
 
 	transportOption := grpc.WithTransportCredentials(insecure.NewCredentials())

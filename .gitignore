@@ -1,1 +1,4 @@
 /config.env
+/.env
+/pg_data
+/.vscode

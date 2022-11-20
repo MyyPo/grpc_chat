@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/MyyPo/grpc-chat/internal/util"
@@ -66,14 +65,13 @@ func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
+		return status.Errorf(codes.Unauthenticated, "metadata was not provided")
 	}
 	values := md["access_token"]
 	if len(values) == 0 {
-		return status.Errorf(codes.Unauthenticated, "access token not provided")
+		return status.Errorf(codes.Unauthenticated, "access token was not provided")
 	}
 	accessToken := values[0]
-	fmt.Println(accessToken)
 	err := interceptor.tokenManager.ValidateToken(accessToken, true)
 	if err != nil {
 		return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
