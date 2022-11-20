@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -15,16 +16,34 @@ import (
 var scanner *bufio.Scanner
 
 func main() {
+	authMethods := map[string]bool{
+		"access_token": true,
+	}
 
 	scanner = bufio.NewScanner(os.Stdin)
 
-	conn, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tempConn, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("Failed to connect to the server")
+	}
+	authClient := client_service.NewSignInClient(tempConn, scanner)
+	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 10*time.Minute)
+	if err != nil {
+		log.Fatalf("Fatal to initialize interceptors %v", err)
+	}
+
+	transportOption := grpc.WithTransportCredentials(insecure.NewCredentials())
+
+	conn, err := grpc.Dial(
+		"localhost:8080",
+		transportOption,
+		grpc.WithUnaryInterceptor(interceptor.Unary()),
+		grpc.WithStreamInterceptor(interceptor.Stream()),
+	)
 	if err != nil {
 		log.Fatalf("Failed to connect to the server")
 	}
 	scanner = bufio.NewScanner(os.Stdin)
-
-	authClient := client_service.NewSignInClient(conn, scanner)
 
 	authClient.SignIn(context.Background())
 

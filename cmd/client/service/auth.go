@@ -37,7 +37,7 @@ func (client *AuthClient) SignIn(ctx context.Context) {
 		} else {
 
 			fmt.Println(res)
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 1)
 			refresh, err := client.RefreshToken(res.RefreshToken)
 			if err != nil {
 				fmt.Printf("Error while trying to refresh the token: %v\n", err)

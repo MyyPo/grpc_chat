@@ -2,14 +2,14 @@ package service
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
 	"log"
 
 	"github.com/MyyPo/grpc-chat/internal/util"
 	"google.golang.org/grpc"
-	// "google.golang.org/grpc/codes"
-	// "google.golang.org/grpc/metadata"
-	// "google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type AuthInterceptor struct {
@@ -46,30 +46,31 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 	) error {
 		log.Println("--> Stream interceptor: ", info.FullMethod)
 
-		// if err := interceptor.authorize(stream.Context(), info.FullMethod); err != nil {
-		// 	return err
-		// }
+		if err := interceptor.authorize(stream.Context(), info.FullMethod); err != nil {
+			return err
+		}
 		return handler(srv, stream)
 	}
 }
 
-// func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string) error {
-// 	md, ok := metadata.FromIncomingContext(ctx)
-// 	fmt.Println(md)
-// 	if !ok {
-// 		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
-// 	}
+func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string) error {
+	md, ok := metadata.FromIncomingContext(ctx)
+	fmt.Println(md)
+	if !ok {
+		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
+	}
 
-// 	values := md["access_token"]
-// 	if len(values) == 0 {
-// 		return status.Errorf(codes.Unauthenticated, "access token not provided")
-// 	}
-// 	accessToken := values[0]
+	// values := md["content-type"]
+	values := md["access_token"]
+	if len(values) == 0 {
+		return status.Errorf(codes.Unauthenticated, "access token not provided")
+	}
+	accessToken := values[0]
+	fmt.Println(accessToken)
+	// err := interceptor.tokenManager.ValidateToken(accessToken, true)
+	// if err != nil {
+	// 	return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
+	// }
 
-// 	err := interceptor.tokenManager.ValidateToken(accessToken, true)
-// 	if err != nil {
-// 		return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
-// 	}
-
-// 	return nil
-// }
+	return nil
+}
