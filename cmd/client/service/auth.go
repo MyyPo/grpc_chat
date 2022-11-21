@@ -51,6 +51,18 @@ func (client *AuthClient) SignIn() (string, error) {
 
 // }
 
+func (client *AuthClient) SignUp(username, password string) (*authpb.SignUpResponse, error) {
+	req := &authpb.SignUpRequest{
+		Username: username,
+		Password: password,
+	}
+	res, err := client.service.SignUp(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func (client *AuthClient) RefreshToken(refreshToken string) (*authpb.RefreshTokenResponse, error) {
 	req := &authpb.RefreshTokenRequest{
 		RefreshToken: refreshToken,

@@ -6,7 +6,18 @@ option go_package = "github.com/MyyPo/grpc-chat/pb/auth/v1;authpb";
 
 service AuthService {
     rpc SignIn (SignInRequest) returns (SignInResponse);
+    rpc SignUp (SignUpRequest) returns (SignUpResponse);
     rpc RefreshToken (RefreshTokenRequest) returns (RefreshTokenResponse);
+}
+
+message SignUpRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message SignUpResponse {
+    string access_token = 1;
+    string refresh_token = 2;    
 }
 
 message SignInRequest {

@@ -24,6 +24,18 @@ type AuthServer struct {
 	grpcLog      glog.LoggerV2
 }
 
+func (s *AuthServer) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*authpb.SignUpResponse, error) {
+	// !TODO
+	user := req.GetUsername()
+	password := req.GetPassword()
+	s.grpcLog.Info("Sign up attempt with: ", user)
+
+	return &authpb.SignUpResponse{
+		AccessToken:  user,
+		RefreshToken: password,
+	}, nil
+}
+
 func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
 	user := req.GetUsername()
 	password := req.GetPassword()
