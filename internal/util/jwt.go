@@ -24,7 +24,7 @@ func NewTokenManager(accessSignature, refreshSignature string, accessTokenDurati
 	}
 }
 
-func (tm *TokenManager) GenerateJWT(isAccessTok bool) (string, error) {
+func (tm *TokenManager) GenerateJWT(isAccessTok bool, userID string) (string, error) {
 	var signature string
 	var duration time.Duration
 
@@ -36,6 +36,8 @@ func (tm *TokenManager) GenerateJWT(isAccessTok bool) (string, error) {
 		signature = tm.RefreshSignature
 		duration = tm.RefreshTokenDuration
 	}
+	// add user id claim
+	sub := userID
 
 	signKey := []byte(signature)
 	now := time.Now().UTC()
@@ -44,6 +46,7 @@ func (tm *TokenManager) GenerateJWT(isAccessTok bool) (string, error) {
 	claims["exp"] = now.Add(duration).Unix()
 	claims["iat"] = now.Unix()
 	claims["nbf"] = now.Unix()
+	claims["sub"] = sub
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signKey)
 
@@ -54,7 +57,7 @@ func (tm *TokenManager) GenerateJWT(isAccessTok bool) (string, error) {
 	return token, nil
 }
 
-func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) error {
+func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) (jwt.MapClaims, error) {
 	var signature string
 	if isAccessTok {
 		signature = tm.AccessSignature
@@ -73,25 +76,31 @@ func (tm *TokenManager) ValidateToken(tokenString string, isAccessTok bool) erro
 		return []byte(signature), nil
 	})
 	if err != nil {
-		return fmt.Errorf("failed to validate the token: %v", err)
+		return nil, fmt.Errorf("failed to validate the token: %v", err)
 	}
 
 	// check if the token expired, or something else is wrong with claims
-	_, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return fmt.Errorf("claims error: %v", err)
+		return nil, fmt.Errorf("claims error: %v", err)
 	}
 
-	return nil
+	return claims, nil
 }
 
 func (tm *TokenManager) RerfreshToken(tokenString string) (authpb.RefreshTokenResponse, error) {
-	if err := tm.ValidateToken(tokenString, false); err != nil {
+	claims, err := tm.ValidateToken(tokenString, false)
+	if err != nil {
 		return authpb.RefreshTokenResponse{}, err
 	}
 
-	accessToken, _ := tm.GenerateJWT(true)
-	refreshToken, _ := tm.GenerateJWT(false)
+	sub, ok := claims["sub"]
+	if !ok {
+		return authpb.RefreshTokenResponse{}, fmt.Errorf("no sub claim")
+	}
+
+	accessToken, _ := tm.GenerateJWT(true, sub.(string))
+	refreshToken, _ := tm.GenerateJWT(false, sub.(string))
 
 	return authpb.RefreshTokenResponse{
 		AccessToken:  accessToken,

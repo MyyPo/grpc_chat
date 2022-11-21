@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	// "github.com/MyyPo/grpc-chat/internal/repositories"
+	"github.com/MyyPo/grpc-chat/internal/repositories"
 	"github.com/MyyPo/grpc-chat/internal/util"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	"google.golang.org/grpc/codes"
@@ -11,10 +11,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager) AuthServer {
+func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager, authRepo repositories.DBAuth) AuthServer {
 	return AuthServer{
 		authpb.UnimplementedAuthServiceServer{},
 		&tokenManager,
+		authRepo,
 		grpcLog,
 	}
 }
@@ -22,18 +23,31 @@ func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager) AuthSe
 type AuthServer struct {
 	authpb.UnimplementedAuthServiceServer
 	tokenManager *util.TokenManager
+	authRepo     repositories.Auth
 	grpcLog      glog.LoggerV2
 }
 
 func (s *AuthServer) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*authpb.SignUpResponse, error) {
 	// !TODO
 	user := req.GetUsername()
-	password := req.GetPassword()
 	s.grpcLog.Info("Sign up attempt with: ", user)
 
+	res, err := s.authRepo.SignUp(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	accessToken, err := s.tokenManager.GenerateJWT(true, res.UserID)
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := s.tokenManager.GenerateJWT(false, res.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &authpb.SignUpResponse{
-		AccessToken:  user,
-		RefreshToken: password,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

@@ -72,7 +72,7 @@ func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string
 		return status.Errorf(codes.Unauthenticated, "access token was not provided")
 	}
 	accessToken := values[0]
-	err := interceptor.tokenManager.ValidateToken(accessToken, true)
+	_, err := interceptor.tokenManager.ValidateToken(accessToken, true)
 	if err != nil {
 		return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)
 	}
