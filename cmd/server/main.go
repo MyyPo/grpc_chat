@@ -15,7 +15,10 @@ import (
 func main() {
 
 	// load the env variables
-	config, err := util.NewConfig("./../..")
+	// config, err := util.NewConfig("./../..")
+	// env in docker
+	config, err := util.NewConfig("./")
+
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}

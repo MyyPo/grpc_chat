@@ -30,7 +30,7 @@ func main() {
 		log.Fatalf("Failed to connect to the server")
 	}
 	authClient := client_service.NewSignInClient(tempConn, scanner)
-	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 10*time.Minute)
+	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 9*time.Minute)
 	if err != nil {
 		log.Fatalf("Failed to initialize interceptors %v", err)
 	}

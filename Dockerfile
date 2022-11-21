@@ -17,6 +17,6 @@ RUN go get github.com/githubnemo/CompileDaemon
 RUN go install github.com/githubnemo/CompileDaemon
 
 # without polling live reload DOESN'T WORK with new docker engine
-ENTRYPOINT CompileDaemon -polling --build="go build -a -installsuffix cgo -o main ." --command=./main
+ENTRYPOINT CompileDaemon -polling --build="go build -a -installsuffix cgo -o main ./cmd/server" --command=./main
 
 EXPOSE 8080
