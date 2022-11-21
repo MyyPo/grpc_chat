@@ -20,6 +20,7 @@ type usersTable struct {
 	UserID   postgres.ColumnString
 	Username postgres.ColumnString
 	Password postgres.ColumnString
+	UserRole postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -63,8 +64,9 @@ func newUsersTableImpl(schemaName, tableName, alias string) usersTable {
 		UserIDColumn   = postgres.StringColumn("user_id")
 		UsernameColumn = postgres.StringColumn("username")
 		PasswordColumn = postgres.StringColumn("password")
-		allColumns     = postgres.ColumnList{UserIDColumn, UsernameColumn, PasswordColumn}
-		mutableColumns = postgres.ColumnList{UsernameColumn, PasswordColumn}
+		UserRoleColumn = postgres.StringColumn("user_role")
+		allColumns     = postgres.ColumnList{UserIDColumn, UsernameColumn, PasswordColumn, UserRoleColumn}
+		mutableColumns = postgres.ColumnList{UsernameColumn, PasswordColumn, UserRoleColumn}
 	)
 
 	return usersTable{
@@ -74,6 +76,7 @@ func newUsersTableImpl(schemaName, tableName, alias string) usersTable {
 		UserID:   UserIDColumn,
 		Username: UsernameColumn,
 		Password: PasswordColumn,
+		UserRole: UserRoleColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

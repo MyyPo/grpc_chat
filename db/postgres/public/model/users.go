@@ -11,4 +11,5 @@ type Users struct {
 	UserID   string `sql:"primary_key"`
 	Username string
 	Password string
+	UserRole *Role
 }

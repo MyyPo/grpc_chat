@@ -30,6 +30,9 @@ func main() {
 		log.Fatalf("Failed to connect to the server")
 	}
 	authClient := client_service.NewSignInClient(tempConn, scanner)
+
+	log.Println(authClient.SignUp("hello", "hehe"))
+
 	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 9*time.Minute)
 	if err != nil {
 		log.Fatalf("Failed to initialize interceptors %v", err)
@@ -47,8 +50,6 @@ func main() {
 		log.Fatalf("Failed to connect to the server")
 	}
 	scanner = bufio.NewScanner(os.Stdin)
-
-	log.Println(authClient.SignUp("hello", "hehe"))
 
 	chatClient := client_service.NewChatClient(conn, scanner)
 

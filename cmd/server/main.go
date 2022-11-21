@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/MyyPo/grpc-chat/internal/util"
+	"github.com/MyyPo/grpc-chat/internal/config"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
 
@@ -16,11 +16,17 @@ func main() {
 
 	// load the env variables
 	// config, err := util.NewConfig("./../..")
-	// env in docker
-	config, err := util.NewConfig("./")
 
+	// env in docker
+	conf, err := config.NewConfig("./")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
+	}
+
+	// db, err := config.ConnectDB()
+	_, err = config.ConnectDB()
+	if err != nil {
+		log.Fatalf("failed to connect db: %v", err)
 	}
 
 	basicPath := "/chat.v1.BroadcastService/"
@@ -29,7 +35,7 @@ func main() {
 		basicPath + "ClientMessage":       {"user"},
 	}
 
-	impl := service.NewImplementation(*config, accessibleRoles)
+	impl := service.NewImplementation(*conf, accessibleRoles)
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(impl.AuthInterceptor.Unary()),
