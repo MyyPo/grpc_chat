@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/MyyPo/grpc-chat/db/postgres/public/model"
 	. "github.com/MyyPo/grpc-chat/db/postgres/public/table"
@@ -24,16 +23,17 @@ func NewAuthRepo(db *sql.DB) *DBAuth {
 	return &DBAuth{db: db}
 }
 
+// fetches userID and password from database for the hasher
 func (r DBAuth) SignIn(ctx context.Context, req *authpb.SignInRequest) (model.Users, error) {
 	// !TODO: validation
 
 	stmt := Users.
 		SELECT(
 			Users.UserID,
+			Users.Password,
 		).FROM(Users).
 		WHERE(
-			Users.Username.EQ(String(req.GetUsername())).
-				AND(Users.Password.EQ(String(req.GetPassword()))),
+			Users.Username.EQ(String(req.GetUsername())),
 		)
 	var result model.Users
 	err := stmt.Query(r.db, &result)
@@ -65,6 +65,5 @@ func (r DBAuth) SignUp(ctx context.Context, req *authpb.SignUpRequest) (model.Us
 	if err != nil {
 		return model.Users{}, err
 	}
-	fmt.Println(result)
 	return result, nil
 }

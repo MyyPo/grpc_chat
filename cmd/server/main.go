@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	// "context"
 	"log"
 	"net"
 
@@ -30,14 +30,6 @@ func main() {
 		log.Fatalf("failed to connect db: %v", err)
 	}
 	authRepo := repositories.NewAuthRepo(db)
-	// res, err := authRepo.SignIn(context.Background(), &authpb.SignInRequest{
-	// 	Username: "Mykyta1",
-	// 	Password: "hello!",
-	// })
-	// if err != nil {
-	// 	log.Fatalf("repo error: %v", err)
-	// }
-	// log.Fatalf(res.Username)
 
 	basicPath := "/chat.v1.BroadcastService/"
 	accessibleRoles := map[string][]string{
@@ -47,14 +39,21 @@ func main() {
 
 	impl := service.NewImplementation(*conf, accessibleRoles, *authRepo)
 
-	res, err := impl.SignIn(context.Background(), &authpb.SignInRequest{
-		Username: "Mykyta123",
-		Password: "hello!",
-	})
-	if err != nil {
-		log.Fatalf("error signing in: %v", err)
-	}
-	log.Fatalln(res)
+	// res, err := impl.SignUp(context.Background(), &authpb.SignUpRequest{
+	// 	Username: "TestingHasher",
+	// 	Password: "TestingHasher",
+	// })
+	// if err != nil {
+	// 	log.Fatalf("error signing UP: %v", err)
+	// }
+	// res, err := impl.SignIn(context.Background(), &authpb.SignInRequest{
+	// 	Username: "TestingHasher",
+	// 	Password: "TestingHasher",
+	// })
+	// if err != nil {
+	// 	log.Fatalf("error signing in: %v", err)
+	// }
+	// log.Fatalln(res)
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(impl.AuthInterceptor.Unary()),

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MyyPo/grpc-chat/internal/repositories"
 	"github.com/MyyPo/grpc-chat/internal/util"
@@ -9,10 +10,15 @@ import (
 	glog "google.golang.org/grpc/grpclog"
 )
 
-func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager, authRepo repositories.DBAuth) AuthServer {
+func NewAuthServer(grpcLog glog.LoggerV2,
+	tokenManager util.TokenManager,
+	hasher Hasher,
+	authRepo repositories.DBAuth,
+) AuthServer {
 	return AuthServer{
 		authpb.UnimplementedAuthServiceServer{},
 		&tokenManager,
+		hasher,
 		authRepo,
 		grpcLog,
 	}
@@ -21,14 +27,16 @@ func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager, authRe
 type AuthServer struct {
 	authpb.UnimplementedAuthServiceServer
 	tokenManager *util.TokenManager
+	hasher       Hasher
 	authRepo     repositories.Auth
 	grpcLog      glog.LoggerV2
 }
 
 func (s *AuthServer) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*authpb.SignUpResponse, error) {
-	// !TODO
-	user := req.GetUsername()
-	s.grpcLog.Info("Sign up attempt with: ", user)
+	username := req.GetUsername()
+	s.grpcLog.Info("Sign up attempt with: ", username)
+
+	req.Password, _ = s.hasher.Hash(req.GetPassword())
 
 	res, err := s.authRepo.SignUp(ctx, req)
 	if err != nil {
@@ -50,12 +58,15 @@ func (s *AuthServer) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
-	user := req.GetUsername()
-	s.grpcLog.Info("Attempt to log in with: ", user)
+	username := req.GetUsername()
+	s.grpcLog.Info("Attempt to log in with: ", username)
 
 	res, err := s.authRepo.SignIn(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid password or username")
+	}
+	if !s.hasher.IsValid(req.GetPassword(), res.Password) {
+		return nil, fmt.Errorf("invalid password or username")
 	}
 
 	accessToken, _ := s.tokenManager.GenerateJWT(true, res.UserID)

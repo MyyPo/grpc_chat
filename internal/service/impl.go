@@ -18,9 +18,10 @@ type Implementation struct {
 func NewImplementation(config config.Config, accessibleRoles map[string][]string, authRepo repositories.DBAuth) Implementation {
 	grpcLogger := glog.NewLoggerV2(os.Stdout, os.Stdout, os.Stdout)
 	tokenManager := util.NewTokenManager(config.AccessSignature, config.RefreshSignature, config.AccessTokenDuration, config.RefreshTokenDuration)
+	hasher := NewHasher()
 
 	return Implementation{
-		NewAuthServer(grpcLogger, tokenManager, authRepo),
+		NewAuthServer(grpcLogger, tokenManager, hasher, authRepo),
 		NewChatServer(grpcLogger),
 		NewAuthInterceptor(tokenManager, accessibleRoles),
 	}
