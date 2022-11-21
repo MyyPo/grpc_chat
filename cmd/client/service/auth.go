@@ -23,10 +23,10 @@ func NewSignInClient(conn *grpc.ClientConn, scanner *bufio.Scanner) *AuthClient 
 
 func (client *AuthClient) SignIn() (string, error) {
 
-	// for {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	username, password := client.getCredentials()
+	// username, password := "TestingHasher", "TestingHasher"
 
 	req := &authpb.SignInRequest{
 		Username: username,

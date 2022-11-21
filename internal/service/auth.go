@@ -68,7 +68,6 @@ func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*au
 	if !s.hasher.IsValid(req.GetPassword(), res.Password) {
 		return nil, fmt.Errorf("invalid password or username")
 	}
-
 	accessToken, _ := s.tokenManager.GenerateJWT(true, res.UserID)
 	if err != nil {
 		return nil, err

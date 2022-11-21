@@ -31,8 +31,6 @@ func main() {
 	}
 	authClient := client_service.NewSignInClient(tempConn, scanner)
 
-	log.Println(authClient.SignUp("hello", "hehe"))
-
 	interceptor, err := client_service.NewAuthInterceptor(authClient, authMethods, 9*time.Minute)
 	if err != nil {
 		log.Fatalf("Failed to initialize interceptors %v", err)
