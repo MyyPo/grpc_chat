@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 
 	"github.com/MyyPo/grpc-chat/internal/config"
+	"github.com/MyyPo/grpc-chat/internal/repositories"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
 	chatpb "github.com/MyyPo/grpc-chat/pb/chat/v1"
 
@@ -23,11 +25,19 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// db, err := config.ConnectDB()
-	_, err = config.ConnectDB()
+	db, err := config.ConnectDB()
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)
 	}
+	authRepo := repositories.NewAuthRepo(db)
+	res, err := authRepo.SignUp(context.Background(), &authpb.SignUpRequest{
+		Username: "Mykyta1",
+		Password: "hello!",
+	})
+	if err != nil {
+		log.Fatalf("repo error: %v", err)
+	}
+	log.Fatalf(res.Username)
 
 	basicPath := "/chat.v1.BroadcastService/"
 	accessibleRoles := map[string][]string{
