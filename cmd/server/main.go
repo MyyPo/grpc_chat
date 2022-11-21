@@ -47,7 +47,7 @@ func main() {
 
 	impl := service.NewImplementation(*conf, accessibleRoles, *authRepo)
 
-	res, err := impl.SignUp(context.Background(), &authpb.SignUpRequest{
+	res, err := impl.SignIn(context.Background(), &authpb.SignInRequest{
 		Username: "Mykyta123",
 		Password: "hello!",
 	})

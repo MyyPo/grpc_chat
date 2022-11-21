@@ -6,9 +6,7 @@ import (
 	"github.com/MyyPo/grpc-chat/internal/repositories"
 	"github.com/MyyPo/grpc-chat/internal/util"
 	authpb "github.com/MyyPo/grpc-chat/pb/auth/v1"
-	"google.golang.org/grpc/codes"
 	glog "google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/status"
 )
 
 func NewAuthServer(grpcLog glog.LoggerV2, tokenManager util.TokenManager, authRepo repositories.DBAuth) AuthServer {
@@ -52,25 +50,27 @@ func (s *AuthServer) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*au
 }
 
 func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*authpb.SignInResponse, error) {
-	// user := req.GetUsername()
-	// password := req.GetPassword()
-	// s.grpcLog.Info("Attempt to log in with: ", user)
+	user := req.GetUsername()
+	s.grpcLog.Info("Attempt to log in with: ", user)
 
-	// repositories.DBAuth.SignIn( ctx, req)
+	res, err := s.authRepo.SignIn(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 
-	// if user == "Anon" && password == "Cute" {
-	// 	s.grpcLog.Infof("User logged in: %s", user)
-	// 	accessToken, _ := s.tokenManager.GenerateJWT(true)
-	// 	refreshToken, _ := s.tokenManager.GenerateJWT(false)
-	// 	res := &authpb.SignInResponse{
-	// 		AccessToken:  accessToken,
-	// 		RefreshToken: refreshToken,
-	// 	}
+	accessToken, _ := s.tokenManager.GenerateJWT(true, res.UserID)
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, _ := s.tokenManager.GenerateJWT(false, res.UserID)
+	if err != nil {
+		return nil, err
+	}
 
-	// 	return res, nil
-	// }
-
-	return nil, status.Errorf(codes.NotFound, "Not found, login failed")
+	return &authpb.SignInResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 
 }
 
