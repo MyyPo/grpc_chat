@@ -85,6 +85,10 @@ func (s *AuthServer) SignIn(ctx context.Context, req *authpb.SignInRequest) (*au
 }
 
 func (s *AuthServer) RefreshToken(ctx context.Context, req *authpb.RefreshTokenRequest) (*authpb.RefreshTokenResponse, error) {
+	err := s.authRepo.CheckBlacklistToken(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("the refresh token has already been used")
+	}
 	tokenPackage, err := s.tokenManager.RerfreshToken(req.GetRefreshToken())
 	if err != nil {
 		return nil, err

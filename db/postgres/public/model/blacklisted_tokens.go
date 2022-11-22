@@ -7,9 +7,6 @@
 
 package model
 
-type Users struct {
-	UserID   string `sql:"primary_key"`
-	Username string
-	Password string
-	UserRole *Role
+type BlacklistedTokens struct {
+	Value string `sql:"primary_key"`
 }

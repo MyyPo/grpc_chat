@@ -13,6 +13,7 @@ import (
 type Auth interface {
 	SignIn(ctx context.Context, req *authpb.SignInRequest) (model.Users, error)
 	SignUp(ctx context.Context, req *authpb.SignUpRequest) (model.Users, error)
+	CheckBlacklistToken(ctx context.Context, req *authpb.RefreshTokenRequest) error
 }
 
 type DBAuth struct {
@@ -66,4 +67,22 @@ func (r DBAuth) SignUp(ctx context.Context, req *authpb.SignUpRequest) (model.Us
 		return model.Users{}, err
 	}
 	return result, nil
+}
+
+// try to insert a new refersh token in the db
+// if it fails, return error signaling that the token is invalid
+func (r DBAuth) CheckBlacklistToken(ctx context.Context, req *authpb.RefreshTokenRequest) error {
+	stmt := BlacklistedTokens.
+		INSERT(
+			BlacklistedTokens.Value,
+		).VALUES(
+		req.GetRefreshToken(),
+	)
+
+	_, err := stmt.Exec(r.db)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
