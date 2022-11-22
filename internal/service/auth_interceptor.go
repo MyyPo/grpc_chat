@@ -67,11 +67,13 @@ func (interceptor *AuthInterceptor) authorize(ctx context.Context, method string
 	if !ok {
 		return status.Errorf(codes.Unauthenticated, "metadata was not provided")
 	}
-	values := md["access_token"]
-	if len(values) == 0 {
+	accessValues := md["access_token"]
+	// refreshValues := md["access_token"]
+	if len(accessValues) == 0 {
 		return status.Errorf(codes.Unauthenticated, "access token was not provided")
 	}
-	accessToken := values[0]
+	accessToken := accessValues[0]
+	// refreshToken := refreshValues[0]
 	_, err := interceptor.tokenManager.ValidateToken(accessToken, true)
 	if err != nil {
 		return status.Errorf(codes.Unauthenticated, "invalid access token: %v", err)

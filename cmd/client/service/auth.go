@@ -21,7 +21,7 @@ func NewSignInClient(conn *grpc.ClientConn, scanner *bufio.Scanner) *AuthClient 
 	return &AuthClient{service, scanner}
 }
 
-func (client *AuthClient) SignIn() (string, error) {
+func (client *AuthClient) SignIn() (*authpb.SignInResponse, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -35,7 +35,7 @@ func (client *AuthClient) SignIn() (string, error) {
 	res, err := client.service.SignIn(ctx, req)
 
 	if err != nil {
-		return "", fmt.Errorf("error while logging in: %v", err)
+		return nil, fmt.Errorf("error while logging in: %v", err)
 	} else {
 
 		// fmt.Println(res)
@@ -45,7 +45,10 @@ func (client *AuthClient) SignIn() (string, error) {
 		// 	fmt.Printf("Error while trying to refresh the token: %v\n", err)
 		// }
 		// fmt.Println(refresh)
-		return res.GetAccessToken(), nil
+		return &authpb.SignInResponse{
+			AccessToken:  res.GetAccessToken(),
+			RefreshToken: res.GetRefreshToken(),
+		}, nil
 	}
 }
 

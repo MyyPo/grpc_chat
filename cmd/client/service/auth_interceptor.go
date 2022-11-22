@@ -10,9 +10,10 @@ import (
 )
 
 type AuthInterceptor struct {
-	authClient  *AuthClient
-	authMethods map[string]bool
-	accessToken string
+	authClient   *AuthClient
+	authMethods  map[string]bool
+	accessToken  string
+	refreshToken string
 }
 
 func NewAuthInterceptor(
@@ -75,11 +76,11 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamClientInterceptor {
 }
 
 func (interceptor *AuthInterceptor) attachToken(ctx context.Context) context.Context {
-	return metadata.AppendToOutgoingContext(ctx, "access_token", interceptor.accessToken)
+	return metadata.AppendToOutgoingContext(ctx, "access_token", interceptor.accessToken, "refresh_token", interceptor.refreshToken)
 }
 
 func (interceptor *AuthInterceptor) scheduleRefreshToken(refreshDuration time.Duration) error {
-	err := interceptor.refreshToken()
+	err := interceptor.frefreshToken()
 	if err != nil {
 		return err
 	}
@@ -88,7 +89,7 @@ func (interceptor *AuthInterceptor) scheduleRefreshToken(refreshDuration time.Du
 		wait := refreshDuration
 		for {
 			time.Sleep(wait)
-			err := interceptor.refreshToken()
+			err := interceptor.frefreshToken()
 			if err != nil {
 				wait = time.Second
 			} else {
@@ -100,14 +101,18 @@ func (interceptor *AuthInterceptor) scheduleRefreshToken(refreshDuration time.Du
 	return nil
 }
 
-func (interceptor *AuthInterceptor) refreshToken() error {
-	accessToken, err := interceptor.authClient.SignIn()
+func (interceptor *AuthInterceptor) frefreshToken() error {
+	// req := &authpb.RefreshTokenRequest{
+	// 	RefreshToken: interceptor.refreshToken,
+	// }
+	res, err := interceptor.authClient.SignIn()
 	if err != nil {
 		return err
 	}
 
-	interceptor.accessToken = accessToken
-	log.Printf("token refreshed: %v", accessToken)
+	interceptor.accessToken = res.GetAccessToken()
+	interceptor.refreshToken = res.GetRefreshToken()
+	log.Printf("token refreshed: %v", res.GetAccessToken())
 
 	return nil
 }
